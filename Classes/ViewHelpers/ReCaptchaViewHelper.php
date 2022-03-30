@@ -15,91 +15,50 @@ namespace RH\RhRecaptcha\ViewHelpers;
  */
 
 use TYPO3\CMS\Core\Page\PageRenderer;
-use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
-use TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper;
-use TYPO3\CMS\Fluid\Core\ViewHelper\Exception\InvalidVariableException;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
+use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
+use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
+use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithRenderStatic;
 
 /**
  * Class ReCaptchaViewHelper
  *
- * @package RH\RhRecaptcha\ViewHelpers
- * @author Richard Haeser <richardhaeser@gmail.com>
+ * @author Vladimir Cherednichenko <vovacherednichenko@o-s-i.org>
  */
-class ReCaptchaViewHelper extends AbstractViewHelper implements SingletonInterface
+class ReCaptchaViewHelper extends AbstractViewHelper
 {
-    /**
-     * @var bool
-     */
-    protected $initialized = false;
+	use CompileWithRenderStatic;
 
-    /**
-     * @var bool
-     */
-    protected $escapeOutput = false;
+	/**
+	 * @inheritDoc
+	 */
+	public static function renderStatic(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
+	{
+		$configurationManager = GeneralUtility::makeInstance(ConfigurationManagerInterface::class);
 
-    /**
-     * @var ConfigurationManagerInterface
-     */
-    protected $configurationManager;
+		$fullTs = $configurationManager->getConfiguration(
+			ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT
+		);
 
-    /**
-     * @param ConfigurationManagerInterface $configurationManager
-     * @return void
-     */
-    public function injectConfigurationManager(ConfigurationManagerInterface $configurationManager)
-    {
-        $this->configurationManager = $configurationManager;
-    }
+		$reCaptchaSettings = $fullTs['plugin.']['tx_powermail.']['settings.']['setup.']['reCAPTCHA.'];
 
-    /**
-     * Returns an instance of the page renderer
-     *
-     * @return PageRenderer
-     */
-    public function getPageRenderer()
-    {
-        if (TYPO3_MODE === 'BE') {
-            $pageRenderer = $this->getDocInstance()->getPageRenderer();
-        } else {
-            $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        }
+		if (isset($reCaptchaSettings) &&
+			is_array($reCaptchaSettings) &&
+			isset($reCaptchaSettings['siteKey']) &&
+			$reCaptchaSettings['siteKey']
+		) {
+			$renderingContext->getVariableProvider()->add('siteKey', $reCaptchaSettings['siteKey']);
+			$content = $renderChildrenClosure();
+		} else {
+			throw new \InvalidArgumentException('No siteKey provided in TypoScript constants', 1358349150);
+		}
 
-        return $pageRenderer;
-    }
-
-    /**
-     * @return string
-     * @throws InvalidVariableException
-     */
-    public function render()
-    {
-        $fullTs = $this->configurationManager->getConfiguration(
-            ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT
-        );
-        $reCaptchaSettings = $fullTs['plugin.']['tx_powermail.']['settings.']['setup.']['reCAPTCHA.'];
-
-        if (isset($reCaptchaSettings) &&
-            is_array($reCaptchaSettings) &&
-            isset($reCaptchaSettings['siteKey']) &&
-            $reCaptchaSettings['siteKey']
-        ) {
-            $this->templateVariableContainer->add('siteKey', $reCaptchaSettings['siteKey']);
-            $content = $this->renderChildren();
-            $this->templateVariableContainer->remove('siteKey');
-        } else {
-            throw new InvalidVariableException('No siteKey provided in TypoScript constants', 1358349150);
-        }
-
-        if (!$this->initialized) {
-            $key = $reCaptchaSettings['siteKey'];
-            $this->initialized = true;
-            $pageRenderer = $this->getPageRenderer();
-            $pageRenderer->addJsFooterInlineCode(
-                'recaptcha',
-                '
+		$key = $reCaptchaSettings['siteKey'];
+		$pageRenderer = static::getPageRenderer();
+		$pageRenderer->addJsFooterInlineCode(
+			'recaptcha',
+			'
 					var recaptchaCallback = function() {
 						for (var i = 1; i <= 1000; ++i) {
 							if (document.getElementById(\'g-recaptcha-\' + i)) {
@@ -112,11 +71,18 @@ class ReCaptchaViewHelper extends AbstractViewHelper implements SingletonInterfa
 					<script src="https://www.google.com/recaptcha/api.js?hl=' . $reCaptchaSettings['lang'] . '&onload=recaptchaCallback&render=explicit"
 						async defer data-ignore="1">/*<![CDATA[*/
 				',
-                false,
-                true
-            );
-        }
+			false,
+			true
+		);
 
-        return $content;
-    }
+		return $content;
+	}
+
+	/**
+	 * @return PageRenderer
+	 */
+	protected static function getPageRenderer(): PageRenderer
+	{
+		return GeneralUtility::makeInstance(PageRenderer::class);
+	}
 }

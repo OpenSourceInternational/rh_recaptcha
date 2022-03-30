@@ -1,9 +1,8 @@
 <?php
 
-
-$EM_CONF[$_EXTKEY] = array(
+$EM_CONF[$_EXTKEY] = [
     'title' => 'reCAPTCHA for Powermail',
-    'description' => 'Implements Google reCAPTCHA 2 to Powermail 2 and 3',
+    'description' => 'Implements Google reCAPTCHA 2 for Powermail',
     'category' => 'plugin',
     'author' => 'Richard Haeser',
     'author_email' => 'richardhaeser@gmail.com',
@@ -12,20 +11,13 @@ $EM_CONF[$_EXTKEY] = array(
     'createDirs' => '',
     'clearCacheOnLoad' => 0,
     'version' => '1.1.1',
-    'constraints' =>
-    array(
-        'depends' =>
-        array(
-            'typo3' => '6.2.0-8.7.99',
-            'powermail' => '2.0.0-3.99.99',
-        ),
-        'conflicts' =>
-        array(
-        ),
-        'suggests' =>
-        array(
-        ),
-    ),
+    'constraints' => [
+        'depends' => [
+            'typo3' => '10.5.0-11.9.99',
+        ],
+        'conflicts' => [],
+        'suggests' => []
+    ],
     'clearcacheonload' => false,
     'author_company' => null,
-);
+];

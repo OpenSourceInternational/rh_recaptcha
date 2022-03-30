@@ -1,35 +1,17 @@
 <?php
+defined('TYPO3_MODE') or die;
+
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['fluid']['namespaces']['rh'][] = 'RH\\RhRecaptcha\\ViewHelpers';
+
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig('
 tx_powermail.flexForm.type.addFieldOptions.recaptcha = reCAPTCHA
 ', 43);
 
 $signalSlotDispatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher::class);
 $signalSlotDispatcher->connect(
-    'In2code\Powermail\Domain\Validator\CustomValidator',
+	\In2code\Powermail\Domain\Validator\CustomValidator::class,
     'isValid',
-    'RH\RhRecaptcha\Domain\Validator\ReCaptchaValidator',
+	\RH\RhRecaptcha\Domain\Validator\ReCaptchaValidator::class,
     'isValid',
     false
 );
-
-if (defined('\In2code\Powermail\Domain\Model\Form::TABLE_NAME')) {
-    $tableName = \In2code\Powermail\Domain\Model\Form::TABLE_NAME;
-} else {
-    $tableName = 'tx_powermail_domain_model_forms';
-}
-
-\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScriptSetup('
-	config.tx_extbase {
-		persistence {
-			classes {
-				RH\RhRecaptcha\Domain\Model\Form {
-					mapping {
-						tableName = ' . $tableName . '
-						columns {
-						}
-					}
-				}
-			}
-		}
-	}
-');
