@@ -1,12 +1,11 @@
-{namespace rh=RH\RhRecaptcha\ViewHelpers}
-{namespace vh=In2code\Powermail\ViewHelpers}
+<f:format.raw>
+    <rh:reCaptcha>
+        <f:form.hidden
+            id="powermail_field_{field.marker}"
+            property="{field.marker}"
+            value="valid"
+            class="powermail_field powermail_hidden {field.css}" />
 
-<rh:reCaptcha>
-	<f:form.hidden
-		id="powermail_field_{field.marker}"
-		property="{field.marker}"
-		value="valid"
-		class="powermail_field powermail_hidden {field.css}" />
-
-	<div class="g-recaptcha" id="g-recaptcha-{field.uid}"></div>
-</rh:reCaptcha>
+        <div class="g-recaptcha" id="g-recaptcha-{field.uid}"></div>
+    </rh:reCaptcha>
+</f:format.raw>
